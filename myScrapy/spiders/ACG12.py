@@ -63,7 +63,11 @@ class ACG12(scrapy.Spider):
                 # 代码进行到这里,说明此图组加入爬取任务
                 self.progress_utils.add_task()
                 group_name = self.image_group_utils.get_group_name(group_code, title)
-                yield Request(href, meta=ImageGroupUtils.create_meta_data(group_code, group_name), callback=self.parse2)
+                meta = {
+                    'group_code': group_code,
+                    'group_name': group_name
+                }
+                yield Request(href, meta=meta, callback=self.parse2)
 
         # 处理下一页
         next_page_div = soup.find('a', class_='poi-pager__item_next', title='下一页')

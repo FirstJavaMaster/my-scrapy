@@ -6,7 +6,7 @@ from myScrapy.spiders.QiWenBeauty import QiWenBeauty
 
 spiders = {
     QiWenBeauty.name: True,
-    ACG12.name: True
+    ACG12.name: False
 }
 
 if __name__ == '__main__':

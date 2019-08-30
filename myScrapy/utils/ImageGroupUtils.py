@@ -1,10 +1,8 @@
 import os
 import re
 
-import requests
-from fake_useragent import UserAgent
-
 from myScrapy import settings
+from myScrapy.items import ImageItem
 from myScrapy.utils.IOUtils import IOUtils
 
 
@@ -58,19 +56,6 @@ class ImageGroupUtils:
         group_path = self.path_cache.get_path(group_code)
         IOUtils.remove_dir(group_path)
 
-    # 保存图片
-    def save(self, group_code, image_name, image_url):
-        group_path = self.path_cache.get_path(group_code)
-        image_path = IOUtils.merge_dir(group_path, image_name)
-
-        headers = {'user-agent': UserAgent().random}
-        response = requests.get(image_url, stream=True, headers=headers)
-        status_code = response.status_code
-        if 200 != status_code:
-            raise RuntimeError('请求异常(%s): %s' % (status_code, image_url))
-        with open(image_path, 'wb') as file:
-            file.write(response.content)
-
     # 图组添加已完成标志
     def group_done(self, group_code):
         old_path = self.path_cache.get_path(group_code)
@@ -103,9 +88,13 @@ class ImageGroupUtils:
             file.write('IDList=\n')
             file.write('URL=' + url + '\n')
 
-    @staticmethod
-    def create_meta_data(group_code, group_name):
-        return {'group_code': group_code, 'group_name': group_name}
+    def get_init_image_item(self, image_group_url, image_group_name):
+        image_item = ImageItem()
+        image_item['image_group_utils'] = self
+        image_item['image_group_url'] = image_group_url
+        image_item['image_group_name'] = image_group_name
+        image_item['image_urls'] = []
+        return image_item
 
 
 class PathCacheUtils:

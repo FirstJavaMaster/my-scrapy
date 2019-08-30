@@ -31,7 +31,7 @@ class QiWenBeauty(scrapy.Spider):
         item_list = soup.find(id="pubu_id").find_all(class_="w")
         item_number = len(item_list)
         self.progress_utils.add_task(item_number)
-        print('进入第%s页, 发现%s组图片' % (page_number, item_number))
+        print('进入网站第 %s 页, 发现 %s 组图片' % (page_number, item_number))
 
         # 循环判断每组图片
         for item in item_list:
@@ -45,8 +45,10 @@ class QiWenBeauty(scrapy.Spider):
                 self.progress_utils.task_complete('跳过已完成图组:' + title)
             else:
                 group_name = self.image_file_utils.get_group_name(group_code, title)
-                self.image_file_utils.create_group_dir(group_name, href)
-                yield Request(href, meta=ImageGroupUtils.create_meta_data(group_code, group_name), callback=self.parse2)
+                meta = {
+                    'image_item': self.image_file_utils.get_init_image_item(href, group_name)
+                }
+                yield Request(href, meta=meta, callback=self.parse2)
 
         # 下一页
         next_page_href = page_div.find(class_='pageNext')['href']
@@ -56,28 +58,25 @@ class QiWenBeauty(scrapy.Spider):
 
     def parse2(self, response):
         soup = BS4Utils.get_soup(response)
-        group_code = response.meta['group_code']
-        group_name = response.meta['group_name']
+        image_item = response.meta['image_item']
+        group_name = image_item['image_group_name']
 
         # 获得图片名,图片完整保存路径
         image_src = soup.find(class_="article-body").find(class_='picimg').find("img")['src']
-        image_name = image_src.split(r'/')[-1]
 
         # 组装图片完整url,下载
         image_url = parse.urljoin(response.url, image_src)
-        # 保存图片(会自动创建图组目录)
-        self.image_file_utils.save(group_code, image_name, image_url)
-        print('保存图片-> %s >> %s >> %s' % (group_name, image_name, image_url))
+        image_item['image_urls'].append(image_url)
+        print('解析图组第 %s 页 >>> %s' % (len(image_item['image_urls']), group_name))
 
         # 处理下一页
         next_page_div = soup.find('a', id='NY_XYY')
         if next_page_div is None:
-            self.image_file_utils.group_done(group_code)
-            self.progress_utils.task_complete('图组下载完成:' + group_name)
+            self.progress_utils.task_complete('图组解析完成, 图片下载中... >>>' + group_name)
+            yield image_item
         else:
             next_page_url = parse.urljoin(response.url, next_page_div['href'])
-            yield Request(next_page_url, meta=ImageGroupUtils.create_meta_data(group_code, group_name),
-                          callback=self.parse2)
+            yield Request(next_page_url, meta=response.meta, callback=self.parse2)
 
     # 获取图组编码
     @staticmethod
