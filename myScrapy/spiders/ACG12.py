@@ -3,7 +3,6 @@ import datetime
 import scrapy
 from scrapy import Request
 
-from myScrapy.items import ImageItem
 from myScrapy.utils import BS4Utils
 from myScrapy.utils.ImageGroupUtils import ImageGroupUtils
 from myScrapy.utils.ProgressUtils import ProgressUtils
@@ -64,7 +63,6 @@ class ACG12(scrapy.Spider):
                 self.progress_utils.add_task()
                 group_name = self.image_group_utils.get_group_name(group_code, title)
                 meta = {
-                    'group_code': group_code,
                     'group_name': group_name
                 }
                 yield Request(href, meta=meta, callback=self.parse2)
@@ -78,7 +76,6 @@ class ACG12(scrapy.Spider):
 
     def parse2(self, response):
         soup = BS4Utils.get_soup(response)
-        group_code = response.meta['group_code']
         group_name = response.meta['group_name']
 
         image_div_list = soup.find('article', class_='inn-singular__post') \
@@ -91,11 +88,7 @@ class ACG12(scrapy.Spider):
 
         print('下载图组 %s >> 共 %s 张图片保存中...' % (group_name, len(image_div_list)))
         # 组装图片url数据
-        image_item = ImageItem()
-        image_item['image_group_utils'] = self.image_group_utils
-        image_item['image_group_url'] = response.url
-        image_item['image_group_name'] = group_name
-        image_item['image_urls'] = []
+        image_item = self.image_group_utils.get_init_image_item(response.url, group_name)
         for image_div in image_div_list:
             src = image_div.get('src')
             image_item['image_urls'].append(src)
