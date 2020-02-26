@@ -10,12 +10,12 @@ from myScrapy.utils.ProgressUtils import ProgressUtils
 
 class ACG12(scrapy.Spider):
     name = "acg-12"
-    allow_domains = ["acg12.com"]
+    allow_domains = ["acgsoso.com"]
     # 各个板块的url,目前包括(动漫图集,图站精选,绅士道,在线图集)
-    start_urls = ['https://acg12.com/category/acg-gallery/',
-                  'https://acg12.com/category/pixiv/',
-                  'https://acg12.com/category/hentai-dou/',
-                  'https://acg12.com/category/online-atlas/']
+    start_urls = ['https://acgsoso.com/category/acg-gallery/',
+                  'https://acgsoso.com/category/pixiv/',
+                  'https://acgsoso.com/category/hentai-dou/',
+                  'https://acgsoso.com/category/online-atlas/']
 
     image_group_utils = ImageGroupUtils(name)
     progress_utils = ProgressUtils()
